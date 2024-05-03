@@ -31,12 +31,12 @@ def get_message():
                     MyMessages= {"Order": int(i['MessageAttributes']['order']['StringValue']),"Word": i['MessageAttributes']['word']['StringValue']}
                     handle= i['ReceiptHandle']
                     print(handle)
-                    # print(MyMessages)
-                    # messages.append(MyMessages)
-                    # Output= json.dumps(messages)
-                    # print(Output)
-                    # with open('data3.json', 'w', encoding='utf-8') as f:
-                    #     json.dump(Output, f, ensure_ascii=False)
+                    print(MyMessages)
+                    messages.append(MyMessages)
+                    Output= json.dumps(messages)
+                    print(Output)
+                    with open('data3.json', 'w', encoding='utf-8') as f:
+                        json.dump(Output, f, ensure_ascii=False)
             else:
                 print("No message in the queue")
 
@@ -85,19 +85,27 @@ for x in mydat:
 
 # Delete Messages in Queue
 
-def delete_message():
-    while True:
-        response = sqs.receive_message(QueueUrl=url,AttributeNames=['All'],
-        MaxNumberOfMessages=10, MessageAttributeNames=['All'])  
-        if "Messages" in response:
-            for i in response["Messages"]:
-                sqs.delete_message_batch(
-                QueueUrl=url,
-                ReceiptHandle= i['ReceiptHandle'])
-                print("Message deleted") 
-        else:
-            print('Empty queue')  
-            break  
+def delete_message(handle):
+    try:
+        # Delete message from SQS queue
+        sqs.delete_message(
+            QueueUrl=url,
+            ReceiptHandle=handle
+        )
+        print("Message deleted")
+    except ClientError as e:
+        print(e.response['Error']['Message'])
 
-if __name__ == "__main__":
-    delete_message()    
+# Use Delete function   
+
+handle= 'AQEBEiih0HIslXOqR3clrgS1QKM6dmjkfqnbAJIN3JAagbUua0AbwSXtX2u1hoafQihLUYPchrCLhGsCAaK6RFF9ZiRj5O6Mr6d4r5voOBWH1OYJ5OsiVwiNOlDcvWr05Yj7LbjmAseZYu+3qYrGM6N/QwMmxadAypVmP+oBr0bSSknypyvohxW+EksaNa4TOiOe4o/vbl7+pbSTtMa/e7QXYvOeoEOBqH4owCC1TlE1pFIAy65sVUn2BFTHHpBeeVo+r7nJEmWhM49fA3bi9cTRF2kAeymzOLEMad45/DuPRN83fPIYKYbr1eTtFoPBFI9/QFbS0FUTgnML0L2DcYCLKATsahSGc4e+KJj6YzjmRuXno0q68P1phZEjsjab8P4J'
+delete_message(handle)
+
+# Any Messages?
+
+response = sqs.receive_message(QueueUrl=url, AttributeNames=['All'],MaxNumberOfMessages=10,MessageAttributeNames=['All']) 
+if "Messages" in response:
+    for i in response:
+        print(i)
+else:
+    print("No Messages")
